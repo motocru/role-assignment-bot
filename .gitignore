@@ -1,0 +1,5 @@
+#All imported node module files that can be built on npm install
+node_modules
+
+#Authorization file
+auth.json

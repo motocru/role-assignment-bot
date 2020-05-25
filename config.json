@@ -1,0 +1,12 @@
+{
+   "prefix": "rb!",
+   "botId": "<@711194100212301856>",
+   "clMessages": {
+      "help": "**rb!help** => Displays this message\n**rb!rolemessage** => prints a message of all roles available with the reactions to add to those roles\n**rb!setmessage** => (for server owners only) this command allows server owners to set a message that users can react to with specified emojis that will add them to their desired roles\nUSAGE:\n\trb!setmessage \n\t:emoji: @serverrole",
+      "joinMessage": "Thank you for inviting me to your server!\nHere are some commands to get you started\n\n**rb!help** => displays the help message\n**rb!setmessage** => allows the server owner to set up a reactable message for others to select joinable roles on",
+      "formatMessage": "The rb!setmessage command does not have the correct format given.",
+      "minReqMessage": "The reaction message must have at least one line with a role and an associated emoji",
+      "animatedMessage": "Emojis used for role association cannot be animated",
+      "correctFormatExample": "**CORRECT FORMAT EXAMPLE**\n\trb!setmessage choose any\n\t:emojiForTheRole: @RoleName"
+   }
+}
