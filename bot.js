@@ -2,7 +2,7 @@
 const Discord = require('discord.js');
 const {prefix, token} = require('./auth.json');
 const config = require('./config.json');
-const servers = require('./db/servers');
+const messages = require('./db/messages');
 const emojiRegex = /(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])\s*<@&[0-9]+>/gi;
 const customRegex = /<:[\w-]+:[0-9]+>\s*<@&[0-9]+>/gi;
 const client = new Discord.Client();
@@ -20,17 +20,18 @@ client.on('guildCreate', guild => {
    let channels = guild.channels.cache;
    channels.forEach(c => {
       if (c.type === "text") {
-         channel = c;
-         if (c.name.toUpperCase() === "ROLES") {
+         if (!c.deleted && channel === undefined) channel = c;
+         if (c.name.toUpperCase() === "ROLES" && !c.deleted) {
             channel = c;
             hasRoleChannel = true;
          }
       }
    });
-   channel.send(config.clMessages.joinMessage);
+   var joiningMess = config.clMessages.joinMessage;
    if (!hasRoleChannel) {
-      channel.send(`A text channel named 'roles' must be added to the sever for this bot to work properly`);
+      joiningMess += `\n\nA text channel named 'roles' must be added to the sever for this bot to work properly`;
    }
+   channel.send(joiningMess);
 })
 
 /**Checks if a valid command message is made on the server and passes
@@ -64,16 +65,16 @@ function BotCommands(message) {
          if (!SetMessageVerification(lines, message, roleAssociations, customAssociations)) {
             break;
          }
+         var type = (lines[0].split(' ')[2].toUpperCase() === 'ANY') ? 1 : 2;
+         messages.addMessage(message.id, message.guild.id, type, function(storedMessage) {
+            console.log(storedMessage);
+         });
          //TODO: include code to insert a server record in the database with this message number
          break;
       case "TEST":
-         var roleAssociations = message.content.match(emojiRegex);
-         var customAssociations = message.content.match(customRegex);
-         console.log(message.content);
-         var customName = customAssociations[0].match(/:[\w-]+:/gi);
-         customName = customName[0].replace(/:/gi, '');
-         customName = message.guild.emojis.cache.find(emoji => emoji.name === customName);
-         console.log(customName);
+         messages.getMessageById('715243787919556628', function(message) {
+            console.log(message);
+         });
          break;
       default:
          message.channel.send('Unknown command, try using: **rb!help**');
@@ -119,6 +120,7 @@ function SetMessageVerification(lines, message, roleAssociations, customAssociat
       message.channel.send(`${config.clMessages.formatMessage}\n${config.clMessages.correctFormatExample}`);
       return false;
    }
+   //console.log('reached  role association');
    if (lines.length < 2 || (roleAssociations === null && customAssociations === null)) {
       message.channel.send(`${config.clMessages.minReqMessage}\n${config.clMessages.correctFormatExample}`);
       return false;
@@ -142,7 +144,7 @@ function SetMessageVerification(lines, message, roleAssociations, customAssociat
 function Line1SetMessageVerification(line1) {
    if (line1.length < 3) return false;
    if (line1[1].toUpperCase() !== "CHOOSE") return false;
-   if (line1[2].toUpperCase() !== "ANY" || line1[2].toUpperCase() !== "ONE") return false;
+   if (line1[2].toUpperCase() !== "ANY" && line1[2].toUpperCase() !== "ONE") return false;
    else return true;
 }
 
