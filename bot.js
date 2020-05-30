@@ -44,6 +44,68 @@ client.on('message', message => {
    } 
 });
 
+/**Triggers when a user adds an emoji to a valid role message */
+client.on('messageReactionAdd', (reaction, user) => {
+   messages.getMessageById(reaction.message.id, function(storedMessage) {
+      if (storedMessage === null) return;
+      var message = IdentifiedMessage(reaction);
+      if (message.deleted) return;
+      var reactLine;
+      if (reaction._emoji.id === null) reactLine = message.content.match(new RegExp(`${reaction._emoji.name}\\s*<@&[0-9]+>`, 'gi'));
+      else reactLine = message.content.match(new RegExp(`<:${reaction._emoji.name}:${reaction._emoji.id}>\\s*<@&[0-9]+>`, 'gi'));
+      if (reactLine === null) return;
+      reactLine = reactLine[0].match(/<@&[0-9]+>/gi);
+      reactLine = reactLine[0].replace(/[<@&>]/gi, '');
+      RoleAssignment('add', reactLine, user);
+   })
+});
+
+/**Triggers when a user removes an emoji from a valid role message */
+client.on('messageReactionRemove', (reaction, user) => {
+   var message_id = (reaction.message === undefined) ? reaction.message_id : reaction.message.id;
+   messages.getMessageById(message_id, function(storedMessage) {
+      if (storedMessage === null) return;
+      var message = IdentifiedMessage(reaction);
+      if (message.deleted) return;
+      if (reaction._emoji === undefined) reaction._emoji = {name: reaction.name, id: reaction.id};
+      var reactLine;
+      if (reaction._emoji.id === null) reactLine = message.content.match(new RegExp(`${reaction._emoji.name}\\s*<@&[0-9]+>`, 'gi'));
+      else reactLine = message.content.match(new RegExp(`<:${reaction._emoji.name}:${reaction._emoji.id}>\\s*<@&[0-9]+>`, 'gi'));
+      if (reactLine === null) return;
+      reactLine = reactLine[0].match(/<@&[0-9]+>/gi);
+      reactLine = reactLine[0].replace(/[<@&>]/gi, '');
+      RoleAssignment('remove', reactLine, user);
+   });
+});
+
+/**This function is necessary to get messageReaction and messageReactionRemove to work on non-cached messages */
+client.on('raw', packet => {
+   //returns if the event is not a message reaction add or remove
+   if (!['MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE'].includes(packet.t)) return;
+   var channelPromise = client.channels.fetch(packet.d.channel_id);
+   //console.log(packet.d);
+   channelPromise.catch(console.error)
+   .then(channel => {
+      //Returns if the message is found in cache which means it will already trigger
+      if (channel.messages.cache.get(packet.d.message_id) !== undefined) return;
+      channel.messages.fetch(packet.d.message_id).catch(console.error)
+      .then(message => {
+         const emoji = packet.d.emoji.id ? packet.d.emoji.id : packet.d.emoji.name;
+         const reaction = message.reactions.cache.get(emoji);
+         client.users.fetch(packet.d.user_id, true).catch(console.error)
+         .then(user => {
+            if (packet.t === 'MESSAGE_REACTION_ADD') client.emit('messageReactionAdd', reaction, user);
+            if (packet.t === 'MESSAGE_REACTION_REMOVE') {
+               var reactionObj = packet.d.emoji;
+               reactionObj.message_id = packet.d.message_id;
+               reactionObj.channel_id = packet.d.channel_id;
+               client.emit('messageReactionRemove', reactionObj, user);
+            }
+         });
+      })
+   })
+});
+
 /**All messages with the command prefix are sent here */
 function BotCommands(message) {
    var mess = message.content;
@@ -54,10 +116,11 @@ function BotCommands(message) {
       case "HELP":
          message.channel.send(config.clMessages.help);
          break;
+         /*
       case "ROLEMESSAGE":
          message.channel.send('This will print out the emoji repsonse message again');
          //TODO: include code to assign the message in the database
-         break;
+         break;*/
       case "SETMESSAGE":
          var lines = message.content.split('\n');
          var roleAssociations = message.content.match(emojiRegex);
@@ -83,33 +146,14 @@ function BotCommands(message) {
 }
 
 /**adds or removes users from roles specified in a server */
-function RoleAssignment(choice, desiredRole, message) {
-   let role = message.guild.roles.cache.find(r => r.name === desiredRole);
-   if (role === undefined) {
-      message.channel.send(`The role: '${desiredRole}' does not exist on this server.\n Use **rb!roles** to display available roles`);
-      return;
-   }
-   if (choice === 'add') {
-      if (HasRole(message.member, desiredRole)) {
-         message.channel.send(`You are already a memeber of the '${desiredRole}' role`);
-         return;
-      }
-      message.member.roles.add(role).catch(console.error)
-      .then(res => {
-         if (res === undefined) message.channel.send('There was an error in adding you to the specified role');
-         else message.channel.send(`You have been added to the '${desiredRole}' role`);
-      });
-   }  else {
-      if (!HasRole(message.member, desiredRole)) {
-         message.channel.send(`You cannot to remove yourself from '${desiredRole}' as you are not a member`);
-         return;
-      }
-      message.member.roles.remove(role).catch(console.error)
-      .then(res => {
-         if (res === undefined) message.channel.send('There was an error in removing you from the specified role');
-         else message.channel.send(`You have been removed from the '${desiredRole}' role`);
-      });
-   }
+function RoleAssignment(choice, desiredRole, user) {
+   
+}
+
+function IdentifiedMessage(reaction) {
+   if (reaction.message !== undefined) return reaction.message;
+   var channel = client.channels.cache.find(r => r.id === reaction.channel_id);
+   return channel.messages.cache.find(m => m.id === reaction.message_id);
 }
 
 /**verifies the rb!setmessage command has the correct format and will try to print out tailored error messages

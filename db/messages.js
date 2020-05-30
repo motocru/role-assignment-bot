@@ -22,7 +22,8 @@ function getMessageById(id, cb) {
             id: id
         }
     }).then(rec => {
-        cb(rec.dataValues);
+        if (rec === null) cb(null);
+        else cb(rec.dataValues);
     })
 }
 module.exports.getMessageById = getMessageById;
