@@ -2,8 +2,8 @@
    "prefix": "rb!",
    "botId": "<@711194100212301856>",
    "clMessages": {
-      "help": "**rb!help** => Displays this message\n**rb!rolemessage** => prints a message of all roles available with the reactions to add to those roles\n**rb!setmessage** => (for server owners only) this command allows server owners to set a message that users can react to with specified emojis that will add them to their desired roles\nUSAGE:\n\trb!setmessage \n\t:emoji: @serverrole",
-      "joinMessage": "Thank you for inviting me to your server!\nHere are some commands to get you started\n\n**rb!help** => displays the help message\n**rb!setmessage** => allows the server owner to set up a reactable message for others to select joinable roles on",
+      "help": "**rb!help** => Displays this message\n**rb!setmessage** => (for server owners only) this command allows server owners to set a message that users can react to with specified emojis that will add them to their desired roles\nUSAGE:\n\trb!setmessage choose (any|one)\n\t:emoji: @Role Name\n\nUsers can then react to the message with the corresponding role to join the role\nIf 'choose one' is used, users can only join one of the roles. 'choose any' will allow users to join any role\n'Set Message' commands can be updated after already used to add / remove roles",
+      "joinMessage": "Thank you for inviting me to your server!\nHere are some commands to get you started\n\n**rb!help** => displays the help message\n**rb!setmessage** => allows the server owner to set up a reactable message for others to select joinable roles on\n\nA text channel named 'roles' must be added on this server if not already present.\nRoles is the only channel where this bot will respond to commands",
       "formatMessage": "The rb!setmessage command does not have the correct format given.",
       "minReqMessage": "The reaction message must have at least one line with a role and an associated emoji",
       "animatedMessage": "Emojis used for role association cannot be animated",

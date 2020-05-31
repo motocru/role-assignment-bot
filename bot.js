@@ -29,7 +29,7 @@ client.on('guildCreate', guild => {
    });
    var joiningMess = config.clMessages.joinMessage;
    if (!hasRoleChannel) {
-      joiningMess += `\n\nA text channel named 'roles' must be added to the sever for this bot to work properly`;
+      joiningMess += `\n\nThere is no channel named 'roles' on this server. One must be created to use this bot`;
    }
    channel.send(joiningMess);
 })
