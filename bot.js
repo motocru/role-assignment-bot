@@ -56,7 +56,7 @@ client.on('messageReactionAdd', (reaction, user) => {
       if (reactLine === null) return;
       reactLine = reactLine[0].match(/<@&[0-9]+>/gi);
       reactLine = reactLine[0].replace(/[<@&>]/gi, '');
-      RoleAssignment('add', reactLine, user);
+      RoleAssignment('add', storedMessage.type, reactLine, user, message);
    })
 });
 
@@ -74,22 +74,24 @@ client.on('messageReactionRemove', (reaction, user) => {
       if (reactLine === null) return;
       reactLine = reactLine[0].match(/<@&[0-9]+>/gi);
       reactLine = reactLine[0].replace(/[<@&>]/gi, '');
-      RoleAssignment('remove', reactLine, user);
+      RoleAssignment('remove', storedMessage.type, reactLine, user, message);
    });
 });
 
 /**This function is necessary to get messageReaction and messageReactionRemove to work on non-cached messages */
 client.on('raw', packet => {
    //returns if the event is not a message reaction add or remove
-   if (!['MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE'].includes(packet.t)) return;
+   if (!['MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE', 'MESSAGE_UPDATE'].includes(packet.t)) return;
    var channelPromise = client.channels.fetch(packet.d.channel_id);
    //console.log(packet.d);
    channelPromise.catch(console.error)
    .then(channel => {
       //Returns if the message is found in cache which means it will already trigger
       if (channel.messages.cache.get(packet.d.message_id) !== undefined) return;
+      if (channel.name.toUpperCase() !== 'ROLES') return;
       channel.messages.fetch(packet.d.message_id).catch(console.error)
       .then(message => {
+         if (packet.t === 'MESSAGE_UPDATE') {UpdatedMessage(packet, message); return;}
          const emoji = packet.d.emoji.id ? packet.d.emoji.id : packet.d.emoji.name;
          const reaction = message.reactions.cache.get(emoji);
          client.users.fetch(packet.d.user_id, true).catch(console.error)
@@ -116,11 +118,6 @@ function BotCommands(message) {
       case "HELP":
          message.channel.send(config.clMessages.help);
          break;
-         /*
-      case "ROLEMESSAGE":
-         message.channel.send('This will print out the emoji repsonse message again');
-         //TODO: include code to assign the message in the database
-         break;*/
       case "SETMESSAGE":
          var lines = message.content.split('\n');
          var roleAssociations = message.content.match(emojiRegex);
@@ -132,12 +129,6 @@ function BotCommands(message) {
          messages.addMessage(message.id, message.guild.id, type, function(storedMessage) {
             console.log(storedMessage);
          });
-         //TODO: include code to insert a server record in the database with this message number
-         break;
-      case "TEST":
-         messages.getMessageById('715243787919556628', function(message) {
-            console.log(message);
-         });
          break;
       default:
          message.channel.send('Unknown command, try using: **rb!help**');
@@ -145,15 +136,70 @@ function BotCommands(message) {
    }
 }
 
+function UpdatedMessage(packet, message) {
+   messages.getMessageById(packet.d.id, function(storedMessage) {
+      if (storedMessage === null) return;
+      message = message.find(m => m.id === packet.d.id);
+      var lines = message.content.split('\n');
+      var roleAssociations = message.content.match(emojiRegex);
+      var customAssociations = message.content.match(customRegex);
+      if (!SetMessageVerification(lines, message, roleAssociations, customAssociations)) {
+         return;
+      }
+      var type = (lines[0].split(' ')[2].toUpperCase() === 'ANY') ? 1 : 2;
+      messages.updateMessage(message.id, type, function(message) {
+         console.log(message);
+      });
+   });
+}
+
 /**adds or removes users from roles specified in a server */
-function RoleAssignment(choice, desiredRole, user) {
-   
+function RoleAssignment(choice, type, desiredRole, user, message) {
+   var role = message.channel.guild.roles.cache.find(r => r.id === desiredRole);
+   var member = message.channel.guild.members.cache.find(m => m.id === user.id);
+   if (HasRole(member, desiredRole) && choice === 'add') {user.send(`${config.userMessages.currentMember} ${role.name} role`); return;}
+   if (choice === 'add') {
+      if (type !== 1) {
+         var moreThanOne = false
+         message.mentions.roles.forEach(element => {
+            if (HasRole(member, element.id)) moreThanOne = true;
+         });
+         if (moreThanOne) {
+            user.send(config.userMessages.moreThanOne);
+            return;
+         }
+      }
+      member.roles.add(role).catch(console.error)
+      .then(result => {
+         AddRemoveRoleResult(result, message, user, role, choice);
+      });
+   } else {
+      member.roles.remove(role).catch(console.error)
+      .then(result => {
+         AddRemoveRoleResult(result, message, user, role, choice);
+      });
+   }
+}
+
+function AddRemoveRoleResult(result, message, user, role, choice) {
+   if (result === undefined) {
+      message.channel.send(config.clMessages.permission);
+      return;
+   }
+   var statement = (choice === 'add') ? config.userMessages.added : config.userMessages.removed;
+   user.send(`${statement} ${role.name} role`);
 }
 
 function IdentifiedMessage(reaction) {
    if (reaction.message !== undefined) return reaction.message;
    var channel = client.channels.cache.find(r => r.id === reaction.channel_id);
    return channel.messages.cache.find(m => m.id === reaction.message_id);
+}
+
+/**Determines if a user is already in a specified role */
+function HasRole(member, role) {
+   let hasRole = member.roles.cache.find(r => r.id === role);
+   return (hasRole === undefined) ? false : true;
 }
 
 /**verifies the rb!setmessage command has the correct format and will try to print out tailored error messages
@@ -190,10 +236,4 @@ function Line1SetMessageVerification(line1) {
    if (line1[1].toUpperCase() !== "CHOOSE") return false;
    if (line1[2].toUpperCase() !== "ANY" && line1[2].toUpperCase() !== "ONE") return false;
    else return true;
-}
-
-/**Determines if a user is already in a specified role */
-function HasRole(member, role) {
-   let hasRole = member.roles.cache.find(r => r.name === role);
-   return (hasRole === undefined) ? false : true;
 }

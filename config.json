@@ -7,6 +7,13 @@
       "formatMessage": "The rb!setmessage command does not have the correct format given.",
       "minReqMessage": "The reaction message must have at least one line with a role and an associated emoji",
       "animatedMessage": "Emojis used for role association cannot be animated",
-      "correctFormatExample": "**CORRECT FORMAT EXAMPLE**\n\trb!setmessage choose any\n\t:emojiForTheRole: @RoleName"
+      "correctFormatExample": "**CORRECT FORMAT EXAMPLE**\n\trb!setmessage choose any\n\t:emojiForTheRole: @RoleName",
+      "permission": "Role Bot does not have permission to add or remove users from this role.\nIf you want to add users to this role the server owner must move the role bot higher than the desired role in the role rankings"
+   },
+   "userMessages": {
+      "currentMember": "You are already a member of the ",
+      "added": "You have been added to the ",
+      "removed": "You have been removed from the ",
+      "moreThanOne": "You cannot assign yourself to multiple roles on a designated 'CHOOSE ONE' role message"
    }
 }

@@ -11,9 +11,16 @@ function addMessage(messageId, serverId, typeNum, cb) {
 module.exports.addMessage = addMessage;
 
 /**Updates a role message on a server */
-function updateMessage() {
-
+function updateMessage(messageId, typeNum, cb) {
+    db.update({type: typeNum}, {
+        where: {
+            id: messageId
+        }
+    }).then(rec => {
+        cb(rec);
+    })
 }
+module.exports.updateMessage = updateMessage;
 
 /**returns a specific message for a server */
 function getMessageById(id, cb) {
