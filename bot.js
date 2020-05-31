@@ -127,7 +127,7 @@ function BotCommands(message) {
          }
          var type = (lines[0].split(' ')[2].toUpperCase() === 'ANY') ? 1 : 2;
          messages.addMessage(message.id, message.guild.id, type, function(storedMessage) {
-            console.log(storedMessage);
+            //console.log(storedMessage);
          });
          break;
       default:
@@ -148,7 +148,7 @@ function UpdatedMessage(packet, message) {
       }
       var type = (lines[0].split(' ')[2].toUpperCase() === 'ANY') ? 1 : 2;
       messages.updateMessage(message.id, type, function(message) {
-         console.log(message);
+         //console.log(message);
       });
    });
 }
