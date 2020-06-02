@@ -14,24 +14,21 @@ client.once('ready', () => {
 client.login(token);
 
 /**Sends a message to the first text based channel found with the important bot details */
-client.on('guildCreate', guild => {
-   let channel = undefined;
-   let hasRoleChannel = false;
+client.on('guildCreate', guild => {W
    let channels = guild.channels.cache;
-   channels.forEach(c => {
-      if (c.type === "text") {
-         if (!c.deleted && channel === undefined) channel = c;
-         if (c.name.toUpperCase() === "ROLES" && !c.deleted) {
-            channel = c;
-            hasRoleChannel = true;
-         }
-      }
-   });
-   var joiningMess = config.clMessages.joinMessage;
-   if (!hasRoleChannel) {
-      joiningMess += `\n\nThere is no channel named 'roles' on this server. One must be created to use this bot`;
+   const rolesChannel = channels.find(channel => (
+      !channel.deleted &&
+      channel.type === 'text' &&
+      channel.name.toUpperCase() === "ROLES"
+   ));
+   if (rolesChannel !== null) channel.send(config.JOIN_SERVER_MESSAGE);
+   else {
+      var fallbackChannel = channels.find(channel => (
+         !channel.deleted &&
+         channel.type === 'text'
+      ));
+      fallbackChannel.send(`${config.JOIN_SERVER_MESSAGE}${config.MISSING_ROLES_CHANNEL}`);
    }
-   channel.send(joiningMess);
 })
 
 /**Checks if a valid command message is made on the server and passes
@@ -78,7 +75,8 @@ client.on('messageReactionRemove', (reaction, user) => {
    });
 });
 
-/**This function is necessary to get messageReaction and messageReactionRemove to work on non-cached messages */
+/**This function is necessary to get messageReaction, messageReactionRemove 
+ * and Message Update to work on non-cached messages */
 client.on('raw', packet => {
    //returns if the event is not a message reaction add or remove
    if (!['MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE', 'MESSAGE_UPDATE'].includes(packet.t)) return;
@@ -131,11 +129,14 @@ function BotCommands(message) {
          });
          break;
       default:
-         message.channel.send('Unknown command, try using: **rb!help**');
+         message.channel.send(config.UNKNOWN_COMMAND);
          break;
    }
 }
 
+/**Determines if a Role Reaction message that was updated is still valid
+ * and then updates the value in the database as expected
+ */
 function UpdatedMessage(packet, message) {
    messages.getMessageById(packet.d.id, function(storedMessage) {
       if (storedMessage === null) return;
@@ -181,6 +182,9 @@ function RoleAssignment(choice, type, desiredRole, user, message) {
    }
 }
 
+/**Verifies if a user was added / removed from the desired role and sends a message to the user
+ * If the bot does not have permission to change the roles it prints a message to the server
+ */
 function AddRemoveRoleResult(result, message, user, role, choice) {
    if (result === undefined) {
       message.channel.send(config.clMessages.permission);
@@ -190,6 +194,7 @@ function AddRemoveRoleResult(result, message, user, role, choice) {
    user.send(`${statement} ${role.name} role`);
 }
 
+/**Returns the desired Discord Message object */
 function IdentifiedMessage(reaction) {
    if (reaction.message !== undefined) return reaction.message;
    var channel = client.channels.cache.find(r => r.id === reaction.channel_id);

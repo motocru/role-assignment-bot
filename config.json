@@ -1,6 +1,15 @@
 {
    "prefix": "rb!",
    "botId": "<@711194100212301856>",
+   "MISSING_ROLES_CHANNEL": "\n\nThere is no channel named 'roles' on this server. One must be created to use this bot",
+   "JOIN_SERVER_MESSAGE": "Thank you for inviting me to your server!\nHere are some commands to get you started\n\n**rb!help** => displays the help message\n**rb!setmessage** => allows the server owner to set up a reactable message for others to select joinable roles on\n\nA text channel named 'roles' must be added on this server if not already present.\nRoles is the only channel where this bot will respond to commands",
+   "ADDED_TO_ROLE_MESSAGE": "",
+   "REMOVED_FROM_ROLE_MESSAGE": "",
+   "BOT_NEEDS_PERMISSION": "",
+   "UNKNOWN_COMMAND": "Unknown command, try using: **rb!help**",,
+   "messages": {
+      
+   },
    "clMessages": {
       "help": "**rb!help** => Displays this message\n**rb!setmessage** => (for server owners only) this command allows server owners to set a message that users can react to with specified emojis that will add them to their desired roles\nUSAGE:\n\trb!setmessage choose (any|one)\n\t:emoji: @Role Name\n\nUsers can then react to the message with the corresponding role to join the role\nIf 'choose one' is used, users can only join one of the roles. 'choose any' will allow users to join any role\n'Set Message' commands can be updated after already used to add / remove roles",
       "joinMessage": "Thank you for inviting me to your server!\nHere are some commands to get you started\n\n**rb!help** => displays the help message\n**rb!setmessage** => allows the server owner to set up a reactable message for others to select joinable roles on\n\nA text channel named 'roles' must be added on this server if not already present.\nRoles is the only channel where this bot will respond to commands",
