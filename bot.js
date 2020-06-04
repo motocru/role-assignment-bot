@@ -14,7 +14,7 @@ client.once('ready', () => {
 client.login(token);
 
 /**Sends a message to the first text based channel found with the important bot details */
-client.on('guildCreate', guild => {W
+client.on('guildCreate', guild => {
    let channels = guild.channels.cache;
    const rolesChannel = channels.find(channel => (
       !channel.deleted &&
