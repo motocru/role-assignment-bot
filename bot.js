@@ -114,7 +114,7 @@ function BotCommands(message) {
 
    switch(cmd) {
       case "HELP":
-         message.channel.send(config.clMessages.help);
+         message.channel.send(config.messages.HELP);
          break;
       case "SETMESSAGE":
          var lines = message.content.split('\n');
@@ -129,7 +129,7 @@ function BotCommands(message) {
          });
          break;
       default:
-         message.channel.send(config.UNKNOWN_COMMAND);
+         message.channel.send(config.messages.UNKNOWN_COMMAND);
          break;
    }
 }
@@ -158,7 +158,10 @@ function UpdatedMessage(packet, message) {
 function RoleAssignment(choice, type, desiredRole, user, message) {
    var role = message.channel.guild.roles.cache.find(r => r.id === desiredRole);
    var member = message.channel.guild.members.cache.find(m => m.id === user.id);
-   if (HasRole(member, desiredRole) && choice === 'add') {user.send(`${config.userMessages.currentMember} ${role.name} role`); return;}
+   if (HasRole(member, desiredRole) && choice === 'add') {
+      user.send(`${config.messages.USER_ALREADY_A_MEMBER} ${role.name}`); 
+      return;
+   }
    if (choice === 'add') {
       if (type !== 1) {
          var moreThanOne = false
@@ -166,7 +169,7 @@ function RoleAssignment(choice, type, desiredRole, user, message) {
             if (HasRole(member, element.id)) moreThanOne = true;
          });
          if (moreThanOne) {
-            user.send(config.userMessages.moreThanOne);
+            user.send(config.messages.MULTIPLE_ROLES_ON_CHOOSE_ONE);
             return;
          }
       }
@@ -187,11 +190,11 @@ function RoleAssignment(choice, type, desiredRole, user, message) {
  */
 function AddRemoveRoleResult(result, message, user, role, choice) {
    if (result === undefined) {
-      message.channel.send(config.clMessages.permission);
+      message.channel.send(config.messages.BOT_NEEDS_PERMISSION);
       return;
    }
-   var statement = (choice === 'add') ? config.userMessages.added : config.userMessages.removed;
-   user.send(`${statement} ${role.name} role`);
+   var statement = (choice === 'add') ? config.messages.ADDED_TO_ROLE_MESSAGE : config.messages.REMOVED_FROM_ROLE_MESSAGE;
+   user.send(`${statement} ${role.name}`);
 }
 
 /**Returns the desired Discord Message object */
@@ -212,12 +215,12 @@ function HasRole(member, role) {
  */
 function SetMessageVerification(lines, message, roleAssociations, customAssociations) {
    if (!Line1SetMessageVerification(lines[0].split(' '))) {
-      message.channel.send(`${config.clMessages.formatMessage}\n${config.clMessages.correctFormatExample}`);
+      message.channel.send(`${config.messages.INCORRECT_SETMESSAGE_FORMAT}\n${config.messages.CORRECT_FORMAT_EXAMPLE}`);
       return false;
    }
    //console.log('reached  role association');
    if (lines.length < 2 || (roleAssociations === null && customAssociations === null)) {
-      message.channel.send(`${config.clMessages.minReqMessage}\n${config.clMessages.correctFormatExample}`);
+      message.channel.send(`${config.messages.LACK_OF_ASSOCIATION_REQUIREMENTS}\n${config.messages.CORRECT_FORMAT_EXAMPLE}`);
       return false;
    }
    if (customAssociations !== null) {
@@ -227,7 +230,7 @@ function SetMessageVerification(lines, message, roleAssociations, customAssociat
          emoji = emoji[0].replace(/:/gi, '');
          emoji = message.guild.emojis.cache.find(e => e.name === emoji);
          if (emoji.animated || emoji.deleted) {
-            message.channel.send(`${config.clMessages.animatedMessage}`);
+            message.channel.send(`${config.messages.ANIMATED_EMOJI_USED}`);
             return false;
          }
       }

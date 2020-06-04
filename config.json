@@ -1,28 +1,19 @@
 {
    "prefix": "rb!",
    "botId": "<@711194100212301856>",
-   "MISSING_ROLES_CHANNEL": "\n\nThere is no channel named 'roles' on this server. One must be created to use this bot",
-   "JOIN_SERVER_MESSAGE": "Thank you for inviting me to your server!\nHere are some commands to get you started\n\n**rb!help** => displays the help message\n**rb!setmessage** => allows the server owner to set up a reactable message for others to select joinable roles on\n\nA text channel named 'roles' must be added on this server if not already present.\nRoles is the only channel where this bot will respond to commands",
-   "ADDED_TO_ROLE_MESSAGE": "",
-   "REMOVED_FROM_ROLE_MESSAGE": "",
-   "BOT_NEEDS_PERMISSION": "",
-   "UNKNOWN_COMMAND": "Unknown command, try using: **rb!help**",,
    "messages": {
-      
-   },
-   "clMessages": {
-      "help": "**rb!help** => Displays this message\n**rb!setmessage** => (for server owners only) this command allows server owners to set a message that users can react to with specified emojis that will add them to their desired roles\nUSAGE:\n\trb!setmessage choose (any|one)\n\t:emoji: @Role Name\n\nUsers can then react to the message with the corresponding role to join the role\nIf 'choose one' is used, users can only join one of the roles. 'choose any' will allow users to join any role\n'Set Message' commands can be updated after already used to add / remove roles",
-      "joinMessage": "Thank you for inviting me to your server!\nHere are some commands to get you started\n\n**rb!help** => displays the help message\n**rb!setmessage** => allows the server owner to set up a reactable message for others to select joinable roles on\n\nA text channel named 'roles' must be added on this server if not already present.\nRoles is the only channel where this bot will respond to commands",
-      "formatMessage": "The rb!setmessage command does not have the correct format given.",
-      "minReqMessage": "The reaction message must have at least one line with a role and an associated emoji",
-      "animatedMessage": "Emojis used for role association cannot be animated",
-      "correctFormatExample": "**CORRECT FORMAT EXAMPLE**\n\trb!setmessage choose any\n\t:emojiForTheRole: @RoleName",
-      "permission": "Role Bot does not have permission to add or remove users from this role.\nIf you want to add users to this role the server owner must move the role bot higher than the desired role in the role rankings"
-   },
-   "userMessages": {
-      "currentMember": "You are already a member of the ",
-      "added": "You have been added to the ",
-      "removed": "You have been removed from the ",
-      "moreThanOne": "You cannot assign yourself to multiple roles on a designated 'CHOOSE ONE' role message"
+      "MISSING_ROLES_CHANNEL": "\n\nThere is no channel named 'roles' on this server. One must be created to use this bot",
+      "JOIN_SERVER_MESSAGE": "Thank you for inviting me to your server!\nHere are some commands to get you started\n\n**rb!help** => displays the help message\n**rb!setmessage** => allows the server owner to set up a reactable message for others to select joinable roles on\n\nA text channel named 'roles' must be added on this server if not already present.\nRoles is the only channel where this bot will respond to commands",
+      "ADDED_TO_ROLE_MESSAGE": "You have been added to ",
+      "REMOVED_FROM_ROLE_MESSAGE": "You have been removed from ",
+      "BOT_NEEDS_PERMISSION": "Role Bot does not have permission to add or remove users from this role.\nIf you want to add users to this role the server owner must move the role bot higher than the desired role in the role rankings",
+      "USER_ALREADY_A_MEMBER": "You are already a member of ",
+      "UNKNOWN_COMMAND": "Unknown command, try using: **rb!help**",
+      "MULTIPLE_ROLES_ON_CHOOSE_ONE": "You cannot assign yourself to multiple roles on a designated 'CHOOSE ONE' role message",
+      "CORRECT_FORMAT_EXAMPLE": "**CORRECT FORMAT EXAMPLE**\n\trb!setmessage choose any\n\t:emojiForTheRole: @RoleName",
+      "INCORRECT_SETMESSAGE_FORMAT": "The rb!setmessage command does not use the correct format.",
+      "LACK_OF_ASSOCIATION_REQUIREMENTS": "The reaction message must have at least one line with a role and an associated emoji",
+      "ANIMATED_EMOJI_USED": "Emojis used for role association cannot be animated",
+      "HELP": "**rb!help** => Displays this message\n**rb!setmessage** => (for server owners only) this command allows server owners to set a message that users can react to with specified emojis that will add them to their desired roles\nUSAGE:\n\trb!setmessage choose (any|one)\n\t:emoji: @Role Name\n\nUsers can then react to the message with the corresponding role to join the role\nIf 'choose one' is used, users can only join one of the roles. 'choose any' will allow users to join any role\n'Set Message' commands can be updated after already used to add / remove roles"
    }
 }
