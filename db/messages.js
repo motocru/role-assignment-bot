@@ -3,7 +3,7 @@ const Sequelize = require('sequelize');
 
 /**Adds a server and associated message to the table */
 function addMessage(messageId, serverId, typeNum, cb) {
-    var message = {id: messageId, server: serverId, type: typeNum};
+    var message = {id: messageId, server: serverId, type: typeNum, valid: true};
     db.create(message).then(newMessage => {
         cb(message);
     })
@@ -11,8 +11,8 @@ function addMessage(messageId, serverId, typeNum, cb) {
 module.exports.addMessage = addMessage;
 
 /**Updates a role message on a server */
-function updateMessage(messageId, typeNum, cb) {
-    db.update({type: typeNum}, {
+function updateMessageType(messageId, typeNum, cb) {
+    db.update({type: typeNum, valid: true}, {
         where: {
             id: messageId
         }
@@ -20,7 +20,18 @@ function updateMessage(messageId, typeNum, cb) {
         cb(rec);
     })
 }
-module.exports.updateMessage = updateMessage;
+module.exports.updateMessageType = updateMessageType;
+
+function updateMessageValid(id, valid, cb) {
+    db.update({valid: valid}, {
+        where: {
+            id: id
+        }
+    }).then(rec => {
+        cb(rec);
+    });
+}
+module.exports.updateMessageValid = updateMessageValid;
 
 /**returns a specific message for a server */
 function getMessageById(id, cb) {
@@ -34,7 +45,3 @@ function getMessageById(id, cb) {
     })
 }
 module.exports.getMessageById = getMessageById;
-
-function getMessagesByServer() {
-
-}

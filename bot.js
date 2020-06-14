@@ -3,6 +3,7 @@ const Discord = require('discord.js');
 const {prefix, token} = require('./auth.json');
 const config = require('./config.json');
 const messages = require('./db/messages');
+const Message = require('./db/db');
 const emojiRegex = /(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])\s*<@&[0-9]+>/gi;
 const customRegex = /<:[\w-]+:[0-9]+>\s*<@&[0-9]+>/gi;
 const client = new Discord.Client();
@@ -16,35 +17,28 @@ client.login(token);
 /**Sends a message to the first text based channel found with the important bot details */
 client.on('guildCreate', guild => {
    let channels = guild.channels.cache;
-   const rolesChannel = channels.find(channel => (
+   const textChannel = channels.find(channel => (
       !channel.deleted &&
-      channel.type === 'text' &&
-      channel.name.toUpperCase() === "ROLES"
+      channel.type === 'text'
    ));
-   if (rolesChannel !== null) channel.send(config.JOIN_SERVER_MESSAGE);
-   else {
-      var fallbackChannel = channels.find(channel => (
-         !channel.deleted &&
-         channel.type === 'text'
-      ));
-      fallbackChannel.send(`${config.JOIN_SERVER_MESSAGE}${config.MISSING_ROLES_CHANNEL}`);
-   }
+   if (textChannel !== null) textChannel.send(config.messages.JOIN_SERVER_MESSAGE);
 })
 
 /**Checks if a valid command message is made on the server and passes
  * it along to the commands if it is in fact valid
  */
 client.on('message', message => {
-   if (message.author.bot || message.channel.name.toUpperCase() !== "ROLES" || message.member.id !== message.guild.ownerID) return;
-   if (/^rb!\w+/.test(message.content)) {
-      BotCommands(message);
-   } 
+   if (message.author.bot || message.member.id !== message.guild.ownerID) return;
+   var mentionedUser = message.mentions.users.find(user => user.id === client.user.id);
+   if (mentionedUser === undefined) return;
+   BotCommands(message);
 });
 
 /**Triggers when a user adds an emoji to a valid role message */
 client.on('messageReactionAdd', (reaction, user) => {
    messages.getMessageById(reaction.message.id, function(storedMessage) {
       if (storedMessage === null) return;
+      if (!storedMessage.valid) return;
       var message = IdentifiedMessage(reaction);
       if (message.deleted) return;
       var reactLine;
@@ -62,6 +56,7 @@ client.on('messageReactionRemove', (reaction, user) => {
    var message_id = (reaction.message === undefined) ? reaction.message_id : reaction.message.id;
    messages.getMessageById(message_id, function(storedMessage) {
       if (storedMessage === null) return;
+      if (!storedMessage.valid) return;
       var message = IdentifiedMessage(reaction);
       if (message.deleted) return;
       if (reaction._emoji === undefined) reaction._emoji = {name: reaction.name, id: reaction.id};
@@ -108,30 +103,19 @@ client.on('raw', packet => {
 
 /**All messages with the command prefix are sent here */
 function BotCommands(message) {
-   var mess = message.content;
-   var args = mess.substring(3).split(' ');
-   var cmd = args[0].toUpperCase();
-
-   switch(cmd) {
-      case "HELP":
-         message.channel.send(config.messages.HELP);
-         break;
-      case "SETMESSAGE":
-         var lines = message.content.split('\n');
-         var roleAssociations = message.content.match(emojiRegex);
-         var customAssociations = message.content.match(customRegex);
-         if (!SetMessageVerification(lines, message, roleAssociations, customAssociations)) {
-            break;
-         }
-         var type = (lines[0].split(' ')[2].toUpperCase() === 'ANY') ? 1 : 2;
-         messages.addMessage(message.id, message.guild.id, type, function(storedMessage) {
-            //console.log(storedMessage);
-         });
-         break;
-      default:
-         message.channel.send(config.messages.UNKNOWN_COMMAND);
-         break;
-   }
+   if (message.content.toUpperCase().includes(`<@!${client.user.id}> HELP`)) {
+      message.channel.send(config.messages.HELP);
+      return;
+   } 
+   var lines = message.content.split('\n');
+   var roleAssociations = message.content.match(emojiRegex); //matches standard unicode emojis
+   var customAssociations = message.content.match(customRegex); //matches non-standard server-specific emojis
+   if (!SetMessageVerification(lines, message, roleAssociations, customAssociations)) return;
+   var type = (lines[0].split(' ')[2].toUpperCase() === 'ANY') ? 1 : 2;
+   //console.log(message);
+   messages.addMessage(message.id, message.guild.id, type, function(storedMessage) {
+      //console.log(storedMessage);
+   });
 }
 
 /**Determines if a Role Reaction message that was updated is still valid
@@ -145,12 +129,15 @@ function UpdatedMessage(packet, message) {
       var roleAssociations = message.content.match(emojiRegex);
       var customAssociations = message.content.match(customRegex);
       if (!SetMessageVerification(lines, message, roleAssociations, customAssociations)) {
-         return;
+         messages.updateMessageValid(message.id, false, function(falseMessage) {
+            message.channel.send(config.messages.REACTION_MESSAGE_NOW_INVALID);
+         });
+      } else {
+         var type = (lines[0].split(' ')[2].toUpperCase() === 'ANY') ? 1 : 2;
+         messages.updateMessageType(message.id, type, function(updatedMessage) {
+            //console.log(message);
+         });
       }
-      var type = (lines[0].split(' ')[2].toUpperCase() === 'ANY') ? 1 : 2;
-      messages.updateMessage(message.id, type, function(message) {
-         //console.log(message);
-      });
    });
 }
 
@@ -190,6 +177,7 @@ function RoleAssignment(choice, type, desiredRole, user, message) {
  */
 function AddRemoveRoleResult(result, message, user, role, choice) {
    if (result === undefined) {
+      console.log(result);
       message.channel.send(config.messages.BOT_NEEDS_PERMISSION);
       return;
    }
@@ -218,7 +206,6 @@ function SetMessageVerification(lines, message, roleAssociations, customAssociat
       message.channel.send(`${config.messages.INCORRECT_SETMESSAGE_FORMAT}\n${config.messages.CORRECT_FORMAT_EXAMPLE}`);
       return false;
    }
-   //console.log('reached  role association');
    if (lines.length < 2 || (roleAssociations === null && customAssociations === null)) {
       message.channel.send(`${config.messages.LACK_OF_ASSOCIATION_REQUIREMENTS}\n${config.messages.CORRECT_FORMAT_EXAMPLE}`);
       return false;
@@ -238,7 +225,7 @@ function SetMessageVerification(lines, message, roleAssociations, customAssociat
    return true;
 }
 
-/**returns true or false based on the correctnessof the first line */
+/**returns true or false based on the correctness of the first line */
 function Line1SetMessageVerification(line1) {
    if (line1.length < 3) return false;
    if (line1[1].toUpperCase() !== "CHOOSE") return false;

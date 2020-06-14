@@ -2,18 +2,17 @@
    "prefix": "rb!",
    "botId": "<@711194100212301856>",
    "messages": {
-      "MISSING_ROLES_CHANNEL": "\n\nThere is no channel named 'roles' on this server. One must be created to use this bot",
-      "JOIN_SERVER_MESSAGE": "Thank you for inviting me to your server!\nHere are some commands to get you started\n\n**rb!help** => displays the help message\n**rb!setmessage** => allows the server owner to set up a reactable message for others to select joinable roles on\n\nA text channel named 'roles' must be added on this server if not already present.\nRoles is the only channel where this bot will respond to commands",
+      "JOIN_SERVER_MESSAGE": "Thank you for inviting me to your server!\nHere are 2 examples of how to use this bot\n**Example 1:**\n\n@react4role choose any\n:emojiForTheRole: @RoleName\n:secondEmjoi: @SecondRole\n\n**Example 2:**\n\n@react4role choose one\n:emojiforOneOption: @RoleNameofFirstOption\n:emojiforAnotherOption: @RoleNameofSecondOption\n\nUse **@react4role help** to display the help message for this bot",
       "ADDED_TO_ROLE_MESSAGE": "You have been added to ",
       "REMOVED_FROM_ROLE_MESSAGE": "You have been removed from ",
-      "BOT_NEEDS_PERMISSION": "Role Bot does not have permission to add or remove users from this role.\nIf you want to add users to this role the server owner must move the role bot higher than the desired role in the role rankings",
+      "BOT_NEEDS_PERMISSION": "react4role does not have permission to add or remove users from this role.\nIf you want to add users to this role the server owner must move the role bot higher than the desired role in the role permissions rankings inside of the server settings menu",
       "USER_ALREADY_A_MEMBER": "You are already a member of ",
-      "UNKNOWN_COMMAND": "Unknown command, try using: **rb!help**",
       "MULTIPLE_ROLES_ON_CHOOSE_ONE": "You cannot assign yourself to multiple roles on a designated 'CHOOSE ONE' role message",
-      "CORRECT_FORMAT_EXAMPLE": "**CORRECT FORMAT EXAMPLE**\n\trb!setmessage choose any\n\t:emojiForTheRole: @RoleName",
-      "INCORRECT_SETMESSAGE_FORMAT": "The rb!setmessage command does not use the correct format.",
+      "CORRECT_FORMAT_EXAMPLE": "**CORRECT FORMAT EXAMPLE**\n\t@react4role choose any\n\t:emojiForTheRole: @RoleName",
+      "INCORRECT_SETMESSAGE_FORMAT": "The '@react4role choose (any|one)' command does not use the correct format.",
       "LACK_OF_ASSOCIATION_REQUIREMENTS": "The reaction message must have at least one line with a role and an associated emoji",
       "ANIMATED_EMOJI_USED": "Emojis used for role association cannot be animated",
-      "HELP": "**rb!help** => Displays this message\n**rb!setmessage** => (for server owners only) this command allows server owners to set a message that users can react to with specified emojis that will add them to their desired roles\nUSAGE:\n\trb!setmessage choose (any|one)\n\t:emoji: @Role Name\n\nUsers can then react to the message with the corresponding role to join the role\nIf 'choose one' is used, users can only join one of the roles. 'choose any' will allow users to join any role\n'Set Message' commands can be updated after already used to add / remove roles"
+      "REACTION_MESSAGE_NOW_INVALID": "The update to the message has made the format invalid and as a result the message can no longer add or remove roles until it is fixed or a new message is created",
+      "HELP": "**@react4role help** => Displays this message\n**@react4role choose (any|one)** => (for server owners only) this command allows server owners to set a message that users can react to with specified emojis that will add them to their desired roles\nUSAGE:\n\t@react4role choose any\n\t:emoji: @Role Name\n\nUsers can then react to the message with the corresponding role to join the role\nIf 'choose one' is used, users can only join one of the roles. 'choose any' will allow users to join any role\n'choose (one|any)' commands can be updated after written to add / remove roles"
    }
 }
