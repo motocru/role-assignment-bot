@@ -67,7 +67,7 @@ client.on('raw', packet => {
  });
 
  /**adds or removes a user from a role based on their given choice */
-async function RoleAssignment(assignment, user, reaction, message) {
+function RoleAssignment(assignment, user, reaction, message) {
     //console.log(reaction);
     if (reaction._emoji === undefined) reaction._emoji = {name: reaction.name, id: reaction.id};
     if (reaction._emoji.id === null) reactLine = message.content.match(new RegExp(`${reaction._emoji.name}\\s*<@&[0-9]+>`, 'gi'));
@@ -94,7 +94,7 @@ async function RoleAssignment(assignment, user, reaction, message) {
                 user.send(config.messages.MULTIPLE_ROLES_ON_CHOOSE_ONE);
                 return;
             }*/
-            await RemoveRoleFromChooseOne(message, member);
+            RemoveRoleFromChooseOne(message, member);
         }
         member.roles.add(desiredRole).catch(console.error)
         .then(result => {
@@ -157,7 +157,8 @@ function RoleMessageVerification(message) {
     return true;
 }
 
-async function RemoveRoleFromChooseOne(message, member) {
+/**removes all other roles that a user might be in if they select a role in a 'choose one' message */
+function RemoveRoleFromChooseOne(message, member) {
     message.mentions.roles.forEach(element => {
         if (HasRole(member, element.id)) {
             member.roles.remove(element).catch(console.error)
