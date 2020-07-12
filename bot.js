@@ -7,10 +7,15 @@ const client = new Discord.Client();
 
 client.once('ready', () => {
     console.log('Ready!');
+    client.user.setStatus('available');
+    client.user.setActivity('@react4role help', {type: 'WATCHING'})
+    .then(presence => console.log(`Activity set to ${presence.activities[0].name}`))
+    .catch(console.error);
  });
  
  client.login(token);
 
+ /**Prints the join message */
  client.on('guildCreate', guild => {
     let channels = guild.channels.cache;
     const textChannel = channels.find(channel => (
@@ -20,6 +25,7 @@ client.once('ready', () => {
     if (textChannel !== null) textChannel.send(config.messages.JOIN_SERVER_MESSAGE);
  })
 
+ /**responds to the server owner with the help message if the criteria are met */
  client.on('message', message => {
     if (message.author.bot || message.member.id !== message.guild.ownerID) return;
     var mentionedUser = message.mentions.users.find(user => user.id === client.user.id);
@@ -61,7 +67,7 @@ client.on('raw', packet => {
  });
 
  /**adds or removes a user from a role based on their given choice */
-function RoleAssignment(assignment, user, reaction, message) {
+async function RoleAssignment(assignment, user, reaction, message) {
     //console.log(reaction);
     if (reaction._emoji === undefined) reaction._emoji = {name: reaction.name, id: reaction.id};
     if (reaction._emoji.id === null) reactLine = message.content.match(new RegExp(`${reaction._emoji.name}\\s*<@&[0-9]+>`, 'gi'));
@@ -79,14 +85,16 @@ function RoleAssignment(assignment, user, reaction, message) {
     if (assignment == 'add') {
         const line1 = message.content.split('\n')[0].split(' ');
         if (line1[1].toLowerCase() === 'one') {
-            var moreThanOne = false
+
+            /*var moreThanOne = false
             message.mentions.roles.forEach(element => {
                 if (HasRole(member, element.id)) moreThanOne = true;
             });
             if (moreThanOne) {
                 user.send(config.messages.MULTIPLE_ROLES_ON_CHOOSE_ONE);
                 return;
-            }
+            }*/
+            await RemoveRoleFromChooseOne(message, member);
         }
         member.roles.add(desiredRole).catch(console.error)
         .then(result => {
@@ -147,4 +155,15 @@ function RoleMessageVerification(message) {
     var customAssociations = message.content.match(customRegex);
     if (roleAssociations === null && customAssociations === null) return false;
     return true;
+}
+
+async function RemoveRoleFromChooseOne(message, member) {
+    message.mentions.roles.forEach(element => {
+        if (HasRole(member, element.id)) {
+            member.roles.remove(element).catch(console.error)
+            .then(result => {
+                AddRemoveRoleResult(result, message, member, element, 'rem');
+            })
+        }
+    });
 }
