@@ -30,7 +30,7 @@ client.once('ready', () => {
     if (message.author.bot || message.member.id !== message.guild.ownerID) return;
     var mentionedUser = message.mentions.users.find(user => user.id === client.user.id);
     if (mentionedUser === undefined) return;
-    console.log(message);
+    //console.log(message);
     if (!RoleMessageVerification(message)) {
         message.channel.send(config.messages.HELP);
     }
