@@ -85,7 +85,7 @@ function RoleAssignment(assignment, user, reaction, message) {
     }
     if (assignment == 'add') {
         const line1 = message.content.split('\n')[0].split(' ');
-        if (line1[1].toLowerCase() === 'one') {
+        if (line1[2].toLowerCase() === 'one') {
             RemoveRoleFromChooseOne(message, member);
         }
         member.roles.add(desiredRole).catch(console.error)
@@ -111,7 +111,8 @@ function AddRemoveRoleResult(result, message, user, role, choice) {
        return;
     }
     var statement = (choice === 'add') ? config.messages.ADDED_TO_ROLE_MESSAGE : config.messages.REMOVED_FROM_ROLE_MESSAGE;
-    user.send(`${statement} ${role.name}`);
+    var messageLink = `https://discordapp.com/channels/${message.channel.guild.id}/${message.channel.id}/${message.id}`;
+    user.send(`${statement} **${role.name}** in ${message.channel.guild.name}\n${messageLink}`);
  }
 
 /**Determines if a user is already in a specified role */
@@ -142,7 +143,7 @@ function RoleMessageVerification(message) {
     if (line1.length < 3 || lines.length < 2) return false;
     if (!line1[0].toLowerCase().includes(client.user.id)) return false;
     if (line1[1].toLowerCase() !== "choose") return false;
-    if (line1[2].toLowerCase() !== 'any' && line1[1].toLowerCase() !== 'one') return false;
+    if (line1[2].toLowerCase() !== 'any' && line1[2].toLowerCase() !== 'one') return false;
     //verifies all subsequent lines
     var roleAssociations = message.content.match(emojiRegex);
     var customAssociations = message.content.match(customRegex);
