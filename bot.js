@@ -30,7 +30,8 @@ client.once('ready', () => {
     if (message.author.bot || message.member.id !== message.guild.ownerID) return;
     var mentionedUser = message.mentions.users.find(user => user.id === client.user.id);
     if (mentionedUser === undefined) return;
-    if (message.content.toUpperCase().includes("HELP")) {
+    console.log(message);
+    if (!RoleMessageVerification(message)) {
         message.channel.send(config.messages.HELP);
     }
  });
@@ -85,15 +86,6 @@ function RoleAssignment(assignment, user, reaction, message) {
     if (assignment == 'add') {
         const line1 = message.content.split('\n')[0].split(' ');
         if (line1[1].toLowerCase() === 'one') {
-
-            /*var moreThanOne = false
-            message.mentions.roles.forEach(element => {
-                if (HasRole(member, element.id)) moreThanOne = true;
-            });
-            if (moreThanOne) {
-                user.send(config.messages.MULTIPLE_ROLES_ON_CHOOSE_ONE);
-                return;
-            }*/
             RemoveRoleFromChooseOne(message, member);
         }
         member.roles.add(desiredRole).catch(console.error)
@@ -147,9 +139,10 @@ function RoleMessageVerification(message) {
     if (author !== message.channel.guild.ownerID) return false;
     var lines = message.content.split('\n');
     var line1 = lines[0].split(" ");
-    if (line1.length < 2 || lines.length < 2) return false;
-    if (line1[0].toLowerCase() !== "choose") return false;
-    if (line1[1].toLowerCase() !== 'any' && line1[1].toLowerCase() !== 'one') return false;
+    if (line1.length < 3 || lines.length < 2) return false;
+    if (!line1[0].toLowerCase().includes(client.user.id)) return false;
+    if (line1[1].toLowerCase() !== "choose") return false;
+    if (line1[2].toLowerCase() !== 'any' && line1[1].toLowerCase() !== 'one') return false;
     //verifies all subsequent lines
     var roleAssociations = message.content.match(emojiRegex);
     var customAssociations = message.content.match(customRegex);
@@ -164,7 +157,7 @@ function RemoveRoleFromChooseOne(message, member) {
             member.roles.remove(element).catch(console.error)
             .then(result => {
                 AddRemoveRoleResult(result, message, member, element, 'rem');
-            })
+            });
         }
     });
 }
