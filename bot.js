@@ -41,18 +41,24 @@ client.once('ready', () => {
  */
 client.on('raw', packet => {
     //returns if the event is not a message reaction add or remove
-    if (!['MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE'].includes(packet.t)) return;
+    if (!['MESSAGE_REACTION_ADD', 'MESSAGE_REACTION_REMOVE', "MESSAGE_UPDATE"].includes(packet.t)) return;
     var channelPromise = client.channels.fetch(packet.d.channel_id);
-    //console.log(packet.d);
+    
     channelPromise.catch(console.error)
     .then(channel => {
         if (!DetermineRoleChannel(channel)) return;
        //Returns if the message is found in cache which means it will already trigger
        //if (channel.messages.cache.get(packet.d.message_id) !== undefined) return;
-       channel.messages.fetch(packet.d.message_id).catch(console.error)
+       var messageId = (packet.t === "MESSAGE_UPDATE") ? packet.d.id : packet.d.message_id;
+       channel.messages.fetch(messageId).catch(console.error)
        .then(message => {
           if (message.deleted) return;
-          if (!RoleMessageVerification(message)) return;
+          //console.log(packet);
+          if (!RoleMessageVerification(message)) {
+              if (packet.t === "MESSAGE_UPDATE") message.channel.send(config.messages.HELP);
+              return;
+          }
+          if (packet.t === "MESSAGE_UPDATE") return;
           const emoji = packet.d.emoji.id ? packet.d.emoji.id : packet.d.emoji.name;
           const reaction = message.reactions.cache.get(emoji);
           client.users.fetch(packet.d.user_id, true).catch(console.error)
@@ -68,7 +74,7 @@ client.on('raw', packet => {
  });
 
  /**adds or removes a user from a role based on their given choice */
-function RoleAssignment(assignment, user, reaction, message) {
+async function RoleAssignment(assignment, user, reaction, message) {
     //console.log(reaction);
     if (reaction._emoji === undefined) reaction._emoji = {name: reaction.name, id: reaction.id};
     if (reaction._emoji.id === null) reactLine = message.content.match(new RegExp(`${reaction._emoji.name}\\s*<@&[0-9]+>`, 'gi'));
@@ -85,17 +91,21 @@ function RoleAssignment(assignment, user, reaction, message) {
     }
     if (assignment == 'add') {
         const line1 = message.content.split('\n')[0].split(' ');
+        var removedRoles = null;
         if (line1[2].toLowerCase() === 'one') {
-            RemoveRoleFromChooseOne(message, member);
+            removedRoles = await RemoveRoleFromChooseOne(message, member);
+            if (removedRoles !== null) {
+                removedRoles = `You have switched roles from **${removedRoles.join(", ")}**`;
+            }
         }
         member.roles.add(desiredRole).catch(console.error)
         .then(result => {
-            AddRemoveRoleResult(result, message, user, desiredRole, assignment);
+            AddRemoveRoleResult(result, message, user, desiredRole, assignment, removedRoles);
         });
     } else {
         member.roles.remove(desiredRole).catch(console.error)
       .then(result => {
-         AddRemoveRoleResult(result, message, user, desiredRole, assignment);
+         AddRemoveRoleResult(result, message, user, desiredRole, assignment, null);
       });
     }
     
@@ -104,15 +114,19 @@ function RoleAssignment(assignment, user, reaction, message) {
 /**Verifies if a user was added / removed from the desired role and sends a message to the user
  * If the bot does not have permission to change the roles it prints a message to the server
  */
-function AddRemoveRoleResult(result, message, user, role, choice) {
+function AddRemoveRoleResult(result, message, user, role, choice, list) {
     if (result === undefined) {
        console.log(result);
        message.channel.send(config.messages.BOT_NEEDS_PERMISSION);
        return;
     }
-    var statement = (choice === 'add') ? config.messages.ADDED_TO_ROLE_MESSAGE : config.messages.REMOVED_FROM_ROLE_MESSAGE;
     var messageLink = `https://discordapp.com/channels/${message.channel.guild.id}/${message.channel.id}/${message.id}`;
-    user.send(`${statement} **${role.name}** in ${message.channel.guild.name}\n${messageLink}`);
+    if (list === null) {
+        var statement = (choice === 'add') ? config.messages.ADDED_TO_ROLE_MESSAGE : config.messages.REMOVED_FROM_ROLE_MESSAGE;
+        user.send(`${statement} **${role.name}** in **${message.channel.guild.name}**\n${messageLink}`);
+    }else {
+        user.send(`${list} to **${role.name}** in **${message.channel.guild.name}** ${config.messages.ONE_ROLE_AT_A_TIME}\n${messageLink}`);
+    }
  }
 
 /**Determines if a user is already in a specified role */
@@ -151,14 +165,20 @@ function RoleMessageVerification(message) {
     return true;
 }
 
-/**removes all other roles that a user might be in if they select a role in a 'choose one' message */
-function RemoveRoleFromChooseOne(message, member) {
+/**removes all other roles that a user might be in if they select a role in a 'choose one' message 
+ * then builds a string to return containing the list of roles teh user was removed from
+*/
+async function RemoveRoleFromChooseOne(message, member) {
+    var removedRoles = [];
+    var removePromises = [];
     message.mentions.roles.forEach(element => {
         if (HasRole(member, element.id)) {
-            member.roles.remove(element).catch(console.error)
-            .then(result => {
-                AddRemoveRoleResult(result, message, member, element, 'rem');
-            });
+            removePromises.push(member.roles.remove(element));
+            removedRoles.push(element.name);
         }
     });
+    
+    await Promise.all(removePromises);
+    //console.log(removedRoles);
+    return (removedRoles.length === 0) ? null : removedRoles;
 }
