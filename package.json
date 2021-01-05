@@ -3,6 +3,6 @@
    "version": "0.1.0",
    "private": true,
    "dependencies": {
-      "discord.js": "^12.2.0"
+      "discord.js": "^12.5.1"
    }
 }
