@@ -1,8 +1,14 @@
-import { Client, GatewayIntentBits, Partials, TextChannel, GuildMember, Message, MessageReaction, Events, User, Role, ReactionEmoji } from 'discord.js';
-import * as auth from './auth.json';
+import { Client, GatewayIntentBits, Partials, TextChannel, GuildMember, Message, Events, User, Role, ReactionEmoji } from 'discord.js';
 import * as config from './config.json';
+import dotenv from 'dotenv';
+dotenv.config();
 
-const token = auth.token;
+const token = process.env.TOKEN;
+
+if (!token) {
+    console.error('Error: TOKEN environment variable is not set.');
+    process.exit(1);
+}
 
 interface Config {
     messages: {
@@ -209,7 +215,6 @@ async function RoleMessageVerification(message: Message): Promise<boolean> {
     if (line1[2].toLowerCase() !== 'any' && line1[2].toLowerCase() !== 'one') return false;
 
     //checking if there are any role associations
-    console.log('emoji checking');
     const roleAssociations = message.content.match(emojiRegex);
     const customAssociations = message.content.match(customRegex);
     if (roleAssociations === null && customAssociations === null) return false;
