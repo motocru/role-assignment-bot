@@ -1,6 +1,7 @@
-import { Client, GatewayIntentBits, Partials, TextChannel, GuildMember, Message, Events, User, Role, ReactionEmoji, GuildEmoji, ApplicationEmoji } from 'discord.js';
+import { Client, GatewayIntentBits, Partials, TextChannel, GuildMember, Message, Events, User, Role, ReactionEmoji, GuildEmoji, ApplicationEmoji, REST, Routes } from 'discord.js';
 import * as config from './config.json';
 import dotenv from 'dotenv';
+import { installCommands, helpCommand } from './commands';
 dotenv.config();
 
 const token = process.env.TOKEN;
@@ -44,12 +45,18 @@ const client = new Client({
     partials: [Partials.Message, Partials.Channel, Partials.Reaction]
 });
 
-client.once(Events.ClientReady, () => {
-    console.log('Ready!');
+client.once(Events.ClientReady, async () => {
     if (client.user) {
         client.user.setStatus('online');
         client.user.setActivity('@react4role help', { type: 3 }); // WATCHING is type 3
     }
+    const rest = new REST({ version: '10' }).setToken(token);
+    var guilds = await client.guilds.fetch();
+    guilds.forEach(async guild => {
+        console.log(`Installing commands for guild: ${guild.name}, ${guild.id}`);
+        await installCommands(client.application!.id, guild.id, rest);
+    });
+    console.log('Ready!');
 });
 
 client.login(token);
@@ -63,6 +70,20 @@ client.on(Events.GuildCreate, async guild => {
         if (textChannel) textChannel.send(typedConfig.messages.JOIN_SERVER_MESSAGE);
     } catch (e) {
         console.error(e);
+    }
+});
+
+client.on(Events.InteractionCreate, async interaction => {
+    try {
+        if (!(interaction.channel instanceof TextChannel)) {
+            return;
+        }
+        if (!interaction.isChatInputCommand()) return;
+
+        await helpCommand.execute(interaction);
+    } catch (error) {
+        console.log('error running interaction');
+        console.log(error);
     }
 });
 
