@@ -68,50 +68,81 @@ client.on(Events.GuildCreate, async guild => {
 
 /**responds to the server owner with the help message if the criteria are met */
 client.on(Events.MessageCreate, async message => {
-    if (message.author.bot || !message.guild) return;
-    if (message.member?.id !== message.guild.ownerId) return;
-
-    if (message.mentions.users.has(client.user!.id)) {
-        if (!(await RoleMessageVerification(message))) {
-            message.channel.send(typedConfig.messages.HELP);
+    try {
+        if (message.partial) {
+            message = await message.fetch();
         }
+        if (message.author.bot || !message.guild) return;
+        if (message.member?.id !== message.guild.ownerId) return;
+
+        if (message.mentions.users.has(client.user!.id)) {
+            if (!(await RoleMessageVerification(message))) {
+                message.channel.send(typedConfig.messages.HELP);
+            }
+        }
+    } catch (error) {
+        console.log('error creating message');
+        console.log(error);
     }
 });
 
 client.on(Events.MessageReactionAdd, async (reaction, user) => {
-    const message = await reaction.message.fetch();
-    const roleMessage = await isRoleMessage(message);
-    if (user.partial) {
-        user = await user.fetch();
-    }
-    if (roleMessage) {
-        //we can add the user to the role
-        const emoji = reaction.emoji as ReactionEmoji;
-        await roleHandling(message, emoji, user, true, message.channel as TextChannel);
+    try {
+        if (reaction.message.partial) {
+            reaction.message = await reaction.message.fetch();
+        }
+        console.log(reaction.message);
+        const roleMessage = await isRoleMessage(reaction.message);
+        console.log(roleMessage);
+        if (user.partial) {
+            user = await user.fetch();
+        }
+        if (roleMessage) {
+            //we can add the user to the role
+            const emoji = reaction.emoji as ReactionEmoji;
+            await roleHandling(reaction.message, emoji, user, true, reaction.message.channel as TextChannel);
+        }
+    } catch (error) {
+        console.log('error adding role');
+        console.log(error);
     }
 });
 
 client.on(Events.MessageReactionRemove, async (reaction, user) => {
-    const message = await reaction.message.fetch();
-    const roleMessage = await isRoleMessage(message);
-    if (user.partial) {
-        user = await user.fetch();
-    }
-    if (roleMessage) {
-        //we can remove the user from the role
-        const emoji = reaction.emoji as ReactionEmoji;
-        await roleHandling(message, emoji, user, false, message.channel as TextChannel);
+    try {
+        if (reaction.message.partial) {
+            reaction.message = await reaction.message.fetch();
+        }
+        const roleMessage = await isRoleMessage(reaction.message);
+        if (user.partial) {
+            user = await user.fetch();
+        }
+        if (roleMessage) {
+            //we can remove the user from the role
+            const emoji = reaction.emoji as ReactionEmoji;
+            await roleHandling(reaction.message, emoji, user, false, reaction.message.channel as TextChannel);
+        }
+    } catch (error) {
+        console.log('error removing role');
+        console.log(error);
     }
 });
 
 client.on(Events.MessageUpdate, async message => {
-    await isRoleMessage(message as Message, true);
+    try {
+        if (message.partial) {
+            message = await message.fetch();
+        }
+        await isRoleMessage(message, true);
+    } catch (error) {
+        console.log('error updating role message');
+        console.log(error);
+    }
 });
 
 async function isRoleMessage(message: Message, isUpdate: boolean = false): Promise<boolean> {
     if (!message.channel.isTextBased()) return false;
     var channel = (await message.channel.fetch()) as TextChannel;
-    message = await message.fetch();
     //determined that the message is in the role channel
     if (channel.name === 'roles' || (channel.topic?.includes('@react4role') ?? false)) {
         const roleMessage = await RoleMessageVerification(message);
