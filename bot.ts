@@ -80,7 +80,10 @@ client.on(Events.InteractionCreate, async interaction => {
         }
         if (!interaction.isChatInputCommand()) return;
 
-        await helpCommand.execute(interaction);
+        //make sure the command name is help
+        if (interaction.commandName === 'help') {
+            await helpCommand.execute(interaction);
+        }
     } catch (error) {
         console.log('error running interaction');
         console.log(error);
