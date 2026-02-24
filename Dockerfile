@@ -28,9 +28,9 @@ WORKDIR /app
 COPY --from=builder /app/package*.json ./
 RUN npm install --only=production
 
-# Copy the transpiled JavaScript files from the 'bin' (or 'build') directory
-# Update 'bin' to match your tsconfig.json output directory
+# Copy the transpiled JavaScript files from the 'dist' directory
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/config.json ./config.json
 
 # Set the command to run the built JavaScript file
 CMD ["node", "./dist/bot.js"] 

@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, Partials, TextChannel, GuildMember, Message, Events, User, Role, ReactionEmoji } from 'discord.js';
+import { Client, GatewayIntentBits, Partials, TextChannel, GuildMember, Message, Events, User, Role, ReactionEmoji, GuildEmoji, ApplicationEmoji } from 'discord.js';
 import * as config from './config.json';
 import dotenv from 'dotenv';
 dotenv.config();
@@ -48,7 +48,7 @@ client.once(Events.ClientReady, () => {
     console.log('Ready!');
     if (client.user) {
         client.user.setStatus('online');
-        client.user.setActivity('@react4role help', { type: 3 }) // WATCHING is type 3
+        client.user.setActivity('@react4role help', { type: 3 }); // WATCHING is type 3
     }
 });
 
@@ -88,6 +88,10 @@ client.on(Events.MessageCreate, async message => {
 
 client.on(Events.MessageReactionAdd, async (reaction, user) => {
     try {
+        //partial retrieval
+        if (reaction.partial) {
+            reaction = await reaction.fetch();
+        }
         if (reaction.message.partial) {
             reaction.message = await reaction.message.fetch();
         }
@@ -99,8 +103,7 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
         }
         if (roleMessage) {
             //we can add the user to the role
-            const emoji = reaction.emoji as ReactionEmoji;
-            await roleHandling(reaction.message, emoji, user, true, reaction.message.channel as TextChannel);
+            await roleHandling(reaction.message, reaction.emoji, user, true, reaction.message.channel as TextChannel);
         }
     } catch (error) {
         console.log('error adding role');
@@ -110,6 +113,10 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
 
 client.on(Events.MessageReactionRemove, async (reaction, user) => {
     try {
+        //partial retrieval
+        if (reaction.partial) {
+            reaction = await reaction.fetch();
+        }
         if (reaction.message.partial) {
             reaction.message = await reaction.message.fetch();
         }
@@ -119,8 +126,7 @@ client.on(Events.MessageReactionRemove, async (reaction, user) => {
         }
         if (roleMessage) {
             //we can remove the user from the role
-            const emoji = reaction.emoji as ReactionEmoji;
-            await roleHandling(reaction.message, emoji, user, false, reaction.message.channel as TextChannel);
+            await roleHandling(reaction.message, reaction.emoji, user, false, reaction.message.channel as TextChannel);
         }
     } catch (error) {
         console.log('error removing role');
@@ -142,7 +148,7 @@ client.on(Events.MessageUpdate, async message => {
 
 async function isRoleMessage(message: Message, isUpdate: boolean = false): Promise<boolean> {
     if (!message.channel.isTextBased()) return false;
-    var channel = (await message.channel.fetch()) as TextChannel;
+    const channel = (await message.channel.fetch()) as TextChannel;
     //determined that the message is in the role channel
     if (channel.name === 'roles' || (channel.topic?.includes('@react4role') ?? false)) {
         const roleMessage = await RoleMessageVerification(message);
@@ -154,7 +160,7 @@ async function isRoleMessage(message: Message, isUpdate: boolean = false): Promi
     return false;
 }
 
-async function roleHandling(message: Message, reaction: ReactionEmoji, user: User, adding: boolean, channel: TextChannel) {
+async function roleHandling(message: Message, reaction: GuildEmoji | ReactionEmoji | ApplicationEmoji, user: User, adding: boolean, channel: TextChannel) {
     //reaction didn't occur in a guild
     if (!message.guild) return;
 
@@ -239,7 +245,8 @@ async function RoleMessageVerification(message: Message): Promise<boolean> {
     if (line1.length < 3) return false;
 
     //checking if the first word is the bot id
-    if (!line1[0].toLowerCase().includes(client.user!.id)) return false;
+    const botId = client.user?.id;
+    if (!botId || !line1[0].toLowerCase().includes(botId)) return false;
     //checking if the second word is 'choose'
     if (line1[1].toLowerCase() !== "choose") return false;
     //checking if the third word is 'any' or 'one'
